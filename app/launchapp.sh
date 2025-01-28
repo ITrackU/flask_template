@@ -50,6 +50,17 @@ erase() {
     echo "Flask Secure Web App has been erased ! Ready to update"
 }
 
+help() {
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "Options:"
+    echo "  -u    Update the Flask app (erase, rebuild, and restart the container)"
+    echo "  -r    Remove the Flask app (stop and remove the container and image)"
+    echo "  -h    Display this help message"
+    echo
+    echo "If no options are provided, the script will check and launch the Flask app."
+}
+
 # Analyze options
 while getopts "u" opt; do
     case ${opt} in
@@ -58,6 +69,13 @@ while getopts "u" opt; do
             erase
             check
             launch
+            ;;
+        r)
+            check
+            erase
+            ;;
+        h)
+            help
             ;;
         \?)
             echo "Invalid option"
