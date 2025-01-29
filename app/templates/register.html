@@ -50,67 +50,7 @@
     </div>
 </div>
 
-<script src="{{ url_for('routes.register', filename='js/encryption.js') }}"></script>
-<script>
-const encryptionHandler = new EncryptionHandler();
-
-async function handleRegistration(event) {
-    event.preventDefault();  // Empêche la soumission classique du formulaire
-
-    const form = event.target;
-    const username = form.username.value;
-    const email = form.email.value;  // Récupère aussi l'email
-    const password = form.password.value;
-    const confirmPassword = form.confirm_password.value;
-    
-    // Vérification si les mots de passe correspondent
-    if (password !== confirmPassword) {
-        alert('Passwords do not match!');
-        return;
-    }
-
-    try {
-        // Générer la clé de chiffrement
-        const key = await encryptionHandler.generateKey();
-        
-        // Afficher l'interface de sauvegarde de la clé
-        document.getElementById('keyBackup').classList.remove('hidden');
-        document.getElementById('encryptionKey').textContent = key;
-        
-        // Stocker la clé localement
-        await encryptionHandler.storeKey(username, key);
-        
-        // Envoi des données au serveur via fetch
-        const response = await fetch('/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',  // Assurer que le Content-Type est en JSON
-                'X-CSRFToken': form.csrf_token.value
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email,  // Envoi également de l'email
-                password: password
-            })
-        });
-
-        if (response.ok) {
-            window.location.href = '/home';  // Si l'enregistrement réussit
-        } else {
-            const errorData = await response.json();
-            alert(errorData.error || 'Registration failed');
-        }
-    } catch (error) {
-        console.error('Registration error:', error);
-        alert('Registration failed. Please try again.');
-    }
-}
-
-function acknowledgeKey() {
-    document.getElementById('keyBackup').classList.add('hidden');
-}
-
-// Attacher l'événement au formulaire pour empêcher la soumission classique
-document.getElementById('registerForm').addEventListener('submit', handleRegistration);
-</script>
+<!-- Load JavaScript files -->
+<script src="{{ url_for('static', filename='js/encryption.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

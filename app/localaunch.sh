@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Créer un environnement virtuel
-python3 -m venv myenv
+python3 -m venv venv
 if [ $? -ne 0 ]; then
     echo "Erreur lors de la création de l'environnement virtuel"
     exit 1
 fi
 
 # Activer l'environnement virtuel
-source myenv/bin/activate  # Sous Windows, utilise "myenv\\Scripts\\activate"
+source venv/bin/activate  # Sous Windows, utilise "myenv\\Scripts\\activate"
 if [ $? -ne 0 ]; then
     echo "Erreur lors de l'activation de l'environnement virtuel"
     exit 1
