@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Register - Secure Flask App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Register</h1>
+    
+    <form id="registerForm" class="space-y-4" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div>
+            <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+            <input type="text" id="username" name="username" required 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        
+        <div>
+            <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+            <input type="email" id="email" name="email" required 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        
+        <div>
+            <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+            <input type="password" id="password" name="password" required 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        
+        <div>
+            <label for="confirm_password" class="block text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" required 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        
+        <div>
+            <button type="submit" 
+                    class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Register
+            </button>
+        </div>
+    </form>
+
+    <div id="keyBackup" class="hidden mt-4 p-4 bg-yellow-100 rounded">
+        <h2 class="font-bold text-yellow-800 mb-2">Important: Save Your Encryption Key</h2>
+        <p class="text-yellow-700 mb-2">This key is required to decrypt your data. Store it safely!</p>
+        <div id="encryptionKey" class="bg-white p-2 rounded break-all"></div>
+        <button onclick="acknowledgeKey()" class="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+            I've Saved My Key
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('routes.register', filename='js/encryption.js') }}"></script>
+<script>
+const encryptionHandler = new EncryptionHandler();
+
+async function handleRegistration(event) {
+    event.preventDefault();  // Empêche la soumission classique du formulaire
+
+    const form = event.target;
+    const username = form.username.value;
+    const email = form.email.value;  // Récupère aussi l'email
+    const password = form.password.value;
+    const confirmPassword = form.confirm_password.value;
+    
+    // Vérification si les mots de passe correspondent
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+
+    try {
+        // Générer la clé de chiffrement
+        const key = await encryptionHandler.generateKey();
+        
+        // Afficher l'interface de sauvegarde de la clé
+        document.getElementById('keyBackup').classList.remove('hidden');
+        document.getElementById('encryptionKey').textContent = key;
+        
+        // Stocker la clé localement
+        await encryptionHandler.storeKey(username, key);
+        
+        // Envoi des données au serveur via fetch
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',  // Assurer que le Content-Type est en JSON
+                'X-CSRFToken': form.csrf_token.value
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,  // Envoi également de l'email
+                password: password
+            })
+        });
+
+        if (response.ok) {
+            window.location.href = '/home';  // Si l'enregistrement réussit
+        } else {
+            const errorData = await response.json();
+            alert(errorData.error || 'Registration failed');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert('Registration failed. Please try again.');
+    }
+}
+
+function acknowledgeKey() {
+    document.getElementById('keyBackup').classList.add('hidden');
+}
+
+// Attacher l'événement au formulaire pour empêcher la soumission classique
+document.getElementById('registerForm').addEventListener('submit', handleRegistration);
+</script>
+{% endblock %}
